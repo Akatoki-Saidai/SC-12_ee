@@ -53,17 +53,9 @@ double ultra_distance = 0; // for HY-SRF05
 void forward()
 {
   ledcWrite(0, 0); // channel, duty
-  ledcWrite(1, 127);
+  ledcWrite(1, 200);
   ledcWrite(2, 0);
-  ledcWrite(3, 107);
-}
-//後転
-void back()
-{
-  ledcWrite(0, 0);
-  ledcWrite(1, 127);
-  ledcWrite(2, 0);
-  ledcWrite(3, 127);
+  ledcWrite(3, 200);
 }
 //停止
 void stoppage()
@@ -77,18 +69,24 @@ void stoppage()
 void rotating()
 {
   ledcWrite(0, 0);
-  ledcWrite(1, 117);
-  ledcWrite(2, 117);
+  ledcWrite(1, 200);
+  ledcWrite(2, 200);
   ledcWrite(3, 0);
 }
 //反回転
 void reverse_rotating()
 {
-  ledcWrite(0, 127);
+  ledcWrite(0, 200);
   ledcWrite(1, 0);
   ledcWrite(2, 0);
-  ledcWrite(3, 127);
+  ledcWrite(3, 200);
 }
+
+//for servomoter
+#include <ESP_servo.h>
+#include <stdio.h>
+#include <string>
+ESP_servo servo1;
 
 //for parachute
 int cutparac = 23;          //切り離し用トランジスタのピン番号の宣言
@@ -193,6 +191,9 @@ void setup()
   pinMode( echoPin, INPUT );
   pinMode( trigPin, OUTPUT );
 
+  //for servomoter
+  servo1.init(19,1);
+
   // for parachute
   pinMode(cutparac, OUTPUT);      //切り離し用トランジスタの出力宣言
   digitalWrite(cutparac, LOW);    //切り離し用トランジスタの出力オフ
@@ -266,11 +267,12 @@ void loop()
           }
           Sum_headingDegrees += headingDegrees;
         }
-        Angle_gy271 = Sum_headingDegrees / 15;
+        Angle_gy271 = Sum_headingDegrees / 15;     
+
     }
     if(phase_state != 3)
     {
-      Serial.println("Press the 'p' key to cut the parachute");
+      Serial.println("Press the 'p','s' or 'm' key!");
     }
     phase_state = 3;
 
@@ -281,12 +283,32 @@ void loop()
         case 'p':
            Serial.println("WARNING: 9v voltage on\n");
            digitalWrite(cutparac, HIGH); //オン
-           delay(outputcutsecond*3);//電流を流す
+           delay(outputcutsecond*1000);//電流を流す
            Serial.println("9v voltage off.\n");
            digitalWrite(cutparac, LOW); //オフ
            break;
+
+        case 's':
+           Serial.println("rotate for 180°");
+           servo1.write(180);//引数は角度(°)
+           delay(5000);
+           servo1.write(0);
+           break;
+
+        case 'm':
+           Serial.println("forward°");
+           forward();
+           delay(5000);
+           Serial.println("rotating");
+           rotating();
+           delay(5000);
+           Serial.println("reverse_rotating");
+           reverse_rotating();
+           delay(5000);
+           break;           
+           
         default:
-           Serial.println("The key you typed is not the 'p' key!");
+           Serial.println("The key you typed is not the right key!");
            break;
        }
     }
