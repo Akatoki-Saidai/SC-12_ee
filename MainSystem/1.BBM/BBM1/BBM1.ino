@@ -42,7 +42,7 @@ const int sck = 13, miso = 15, mosi = 14, ss = 27;
 double Duration = 0; //受信した間隔
 
 //センサー値を格納するための変数
-double Temperature, Pressure, Humid; // for BME280
+float Temperature, Pressure, Humid; // for BME280
 double accelX, accelY, accelZ, gyroX, gyroY, gyroZ, accelSqrt; // for MPU6050
 double gps_latitude, gps_longitude, gps_velocity; // for GPS
 int gps_time; // for GPS
@@ -120,7 +120,6 @@ void setup()
   // for BME280
   bool status;
   status = bme.begin(0x76);
-  delay(1000);
 
   // for ESP32
   #ifdef _ESP32_HAL_I2C_H_
@@ -213,6 +212,7 @@ void loop()
         Temperature = bme.readTemperature();
         Pressure = bme.readPressure() / 100.0;
         Humid = bme.readHumidity();
+        delay(1000);
 
         // for MPU6050
         mySensor.accelUpdate();
