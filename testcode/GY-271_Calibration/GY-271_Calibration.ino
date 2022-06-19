@@ -11,7 +11,8 @@ double declinationAngle = 0;
 
 void setup(){
   // put your setup code here, to run once:
-    // for GY-271
+  Serial.begin(115200);
+  // for GY-271
   while (!compass.begin()){
     Serial.println("Could not find a valid QMC5883 sensor, check wiring!");
     delay(500);
@@ -51,7 +52,7 @@ void setup(){
         Serial.print("CalibrationCounter = ");
         Serial.println(CalibrationCounter);
       }
-    }
+  }
 }
 void loop() {
   // put your main code here, to run repeatedly:
@@ -59,12 +60,14 @@ void loop() {
   heading = atan2(norm.YAxis, norm.XAxis);
   declinationAngle = (-7.0 + (46.0 / 60.0)) / (180 / PI);
   heading += declinationAngle;
-  if (heading < 0)        heading += 2 * PI;
+  if (heading < 0){
+    heading += 2 * PI;
+  }
   if (heading > 2 * PI){
     heading -= 2 * PI;
     // Convert to degrees
-    headingDegrees = heading * 180 / M_PI;
   }
+  headingDegrees = heading * 180 / M_PI;
   if (headingDegrees < 0)   headingDegrees += 360;
   if (headingDegrees > 360) headingDegrees -= 360;
   Serial.println(headingDegrees);
