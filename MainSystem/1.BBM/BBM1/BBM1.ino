@@ -105,7 +105,7 @@ void setup()
   SPI.begin(sck, miso, mosi, ss);
   SD.begin(ss, SPI);
   CanSatLogData = SD.open("/CanSatLogData.txt", FILE_APPEND);
-  SensorData = SD.open("/SensorData.txt", FILE_APPEND);
+  SensorData = SD.open("/SensorData.csv", FILE_APPEND);
   CanSatLogData.println("START_RECORD");
   CanSatLogData.flush();
   SensorData.println("gps_time,gps_latitude,gps_longitude,gps_velocity,Temperature,Pressure,Humid,accelX,accelY,accelZ,headingDegrees,Angle_gy271,ultra_distance");
