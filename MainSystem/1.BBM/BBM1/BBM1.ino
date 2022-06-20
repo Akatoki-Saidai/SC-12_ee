@@ -10,7 +10,7 @@
 MPU9250_asukiaaa mySensor;
 
 // for BME280
-#include <Wire.h> //I2C通信
+#include <Wire.h> // I2C通信
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 Adafruit_BME280 bme;
@@ -22,15 +22,15 @@ TinyGPSPlus gps;
 // for GY-271
 #include <DFRobot_QMC5883.h>
 DFRobot_QMC5883 compass;
-int CalibrationCounter = 1; //キャリブレーションで取得したデータの個数
-double declinationAngle; //補正用
-double heading; //弧度法
-double headingDegrees; //度数法
+int CalibrationCounter = 1; // キャリブレーションで取得したデータの個数
+double declinationAngle; // 補正用
+double heading; // 弧度法
+double headingDegrees; // 度数法
 double Sum_headingDegrees; //連続15個のheadingDegreesの和
-double Angle_gy271; //連続15個の平均値(度数法)
+double Angle_gy271; // 連続15個の平均値(度数法)
 
 // for SD Card
-#include <SPI.h> //SDカードはSPI通信
+#include <SPI.h> // SDカードはSPI通信
 #include <SD.h>
 File CanSatLogData;
 File SensorData;
@@ -39,17 +39,17 @@ const int sck = 13, miso = 15, mosi = 14, ss = 27;
 // for HY-SRF05
 #define echoPin 16 // Echo Pin
 #define trigPin 17 // Trigger Pin
-double Duration = 0; //受信した間隔
+double Duration = 0; // 受信した間隔
 
-//センサー値を格納するための変数
+// センサー値を格納するための変数
 float Temperature, Pressure, Humid; // for BME280
 double accelX, accelY, accelZ, gyroX, gyroY, gyroZ, accelSqrt; // for MPU6050
 double gps_latitude, gps_longitude, gps_velocity; // for GPS
 int gps_time; // for GPS
 double ultra_distance = 0; // for HY-SRF05
 
-//for motor
-//前進
+// for motor
+// 前進
 void forward()
 {
   ledcWrite(0, 0); // channel, duty
@@ -57,7 +57,7 @@ void forward()
   ledcWrite(2, 0);
   ledcWrite(3, 200);
 }
-//停止
+// 停止
 void stoppage()
 {
   ledcWrite(0, 0);
@@ -65,7 +65,7 @@ void stoppage()
   ledcWrite(2, 0);
   ledcWrite(3, 0);
 }
-//回転
+// 回転
 void rotating()
 {
   ledcWrite(0, 0);
@@ -73,7 +73,7 @@ void rotating()
   ledcWrite(2, 200);
   ledcWrite(3, 0);
 }
-//反回転
+// 反回転
 void reverse_rotating()
 {
   ledcWrite(0, 200);
@@ -82,22 +82,22 @@ void reverse_rotating()
   ledcWrite(3, 200);
 }
 
-//for servomoter
+// for servomoter
 #include <ESP_servo.h>
 #include <stdio.h>
 #include <string>
 ESP_servo servo1;
 
-//for parachute
-int cutparac = 23;          //切り離し用トランジスタのピン番号の宣言
-int outputcutsecond = 3;    //切り離し時の9V電圧を流す時間，単位はsecond
+// for parachute
+int cutparac = 23;          // 切り離し用トランジスタのピン番号の宣言
+int outputcutsecond = 3;    // 切り離し時の9V電圧を流す時間，単位はsecond
 int phase_state = 0;
 char key = '0';
 
 void setup()
 {
-  //for GPS
-  Serial1.begin(115200, SERIAL_8N1, 5, 18); //ESP32-GPS間のシリアル通信開始
+  // for GPS
+  Serial1.begin(9600, SERIAL_8N1, 5, 18); // ESP32-GPS間のシリアル通信開始
   
   // SD Card initialization
   SPI.begin(sck, miso, mosi, ss);
@@ -106,11 +106,11 @@ void setup()
   SensorData = SD.open("/SensorData.csv", FILE_APPEND);
   CanSatLogData.println("START_RECORD");
   CanSatLogData.flush();
-  SensorData.println("gps_time,gps_latitude,gps_longitude,gps_velocity,Temperature,Pressure,Humid,accelX,accelY,accelZ,headingDegrees,Angle_gy271,ultra_distance");
+  SensorData.println("gps_time,gps_latitude,gps_longitude,gps_velocity,Temperature,Pressure,Humid,accelX,accelY,accelZ,Angle_gy271,ultra_distance");
   SensorData.flush();
 
-  //for Serial communication
-  Serial.begin(115200); //PC-ESP32間のシリアル通信開始
+  // for Serial communication
+  Serial.begin(115200); // PC-ESP32間のシリアル通信開始
   
   // for MPU6050
   mySensor.beginAccel();
@@ -139,7 +139,7 @@ void setup()
   ledcAttachPin(25, 3);
 
   // for GY-271
-  //GY-271の初期化
+  // GY-271の初期化
   while (!compass.begin())
   {
     Serial.println("Could not find a valid QMC5883 sensor, check wiring!");
@@ -161,9 +161,9 @@ void setup()
     compass.setDataRate(QMC5883_DATARATE_50HZ);
     compass.setSamples(QMC5883_SAMPLES_8);
   }
-  //GY-271の初期化終了
+  // GY-271の初期化終了
   
-  //GY-271のキャリブレーション
+  // GY-271のキャリブレーション
   delay(100);
   Serial.println("calibration rotating!");
   while (CalibrationCounter < 551)
@@ -184,7 +184,7 @@ void setup()
       Serial.println(CalibrationCounter);
     }
   }
-  //GY-271のキャリブレーション終了
+  // GY-271のキャリブレーション終了
 
   // for HY-SRF05
   pinMode( echoPin, INPUT );
@@ -194,25 +194,24 @@ void setup()
   servo1.init(19,1);
 
   // for parachute
-  pinMode(cutparac, OUTPUT);      //切り離し用トランジスタの出力宣言
-  digitalWrite(cutparac, LOW);    //切り離し用トランジスタの出力オフ
+  pinMode(cutparac, OUTPUT);      // 切り離し用トランジスタの出力宣言
+  digitalWrite(cutparac, LOW);    // 切り離し用トランジスタの出力オフ
   
 } // setup関数閉じ
 
 void loop()
 {
-  if (Serial1.available() > 0) //"Serial1.available() > 0"がないとGPS使えない
+  if (Serial1.available() > 0) // "Serial1.available() > 0"がないとGPS使えない
   { 
     char c = Serial1.read();
     gps.encode(c);
-    if (gps.location.isUpdated()) //この中でGPSのデータを使わないと，うまく値が表示されない
+    if (gps.location.isUpdated()) // この中でGPSのデータを使わないと，うまく値が表示されない
     { 
-        //センサー値取得
+        // センサー値取得
         // for BME280
         Temperature = bme.readTemperature();
         Pressure = bme.readPressure() / 100.0;
         Humid = bme.readHumidity();
-        delay(1000);
 
         // for MPU6050
         mySensor.accelUpdate();
@@ -233,15 +232,14 @@ void loop()
         // for HY-SRF05
         digitalWrite(trigPin, LOW); 
         delay(2); 
-        digitalWrite( trigPin, HIGH ); //超音波を10ms間送信
+        digitalWrite( trigPin, HIGH ); // 超音波を10ms間送信
         delay(10);
-        digitalWrite( trigPin, LOW ); //超音波を停止      
-        Duration = pulseIn( echoPin, HIGH ); //センサからの入力
+        digitalWrite( trigPin, LOW ); // 超音波を停止      
+        Duration = pulseIn( echoPin, HIGH ); // センサからの入力
         if (Duration > 0) {
           Duration = Duration/2; //往復距離を半分にする
           ultra_distance = Duration*340*100/1000000; // 音速を340m/sに設定
         }
-        delay(100);//取得間隔0.1秒
 
         // for GY-271
         Sum_headingDegrees = 0.0; // Sum_headingDegreesの初期化
@@ -296,7 +294,7 @@ void loop()
            break;
 
         case 'm':
-           Serial.println("forward°");
+           Serial.println("forward");
            forward();
            delay(5000);
            Serial.println("rotating");
@@ -334,8 +332,6 @@ void loop()
     Serial.print(",");
     Serial.print(accelZ);
     Serial.print(",");
-    Serial.print(headingDegrees);
-    Serial.print(",");
     Serial.print(Angle_gy271);
     Serial.print(",");
     Serial.println(ultra_distance);
@@ -361,11 +357,9 @@ void loop()
     SensorData.print(",");
     SensorData.print(accelZ);
     SensorData.print(",");
-    SensorData.print(headingDegrees);
-    SensorData.print(",");
     SensorData.print(Angle_gy271);
     SensorData.print(",");
     SensorData.println(ultra_distance);
     SensorData.flush();
-  }
+  } // "if(Serial1.available()>0)"の閉じ
 } // loop関数の閉じ
