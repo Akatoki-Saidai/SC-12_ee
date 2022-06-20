@@ -267,49 +267,12 @@ void loop()
         }
         Angle_gy271 = Sum_headingDegrees / 15;     
 
-    }
+    
     if(phase_state != 3)
     {
       Serial.println("Press the 'p','s' or 'm' key!");
     }
     phase_state = 3;
-
-    if(Serial.available()>0)//何かキーが押されたら
-    {
-       key = Serial.read();
-       switch(key){
-        case 'p':
-           Serial.println("WARNING: 9v voltage on\n");
-           digitalWrite(cutparac, HIGH); //オン
-           delay(outputcutsecond*1000);//電流を流す
-           Serial.println("9v voltage off.\n");
-           digitalWrite(cutparac, LOW); //オフ
-           break;
-
-        case 's':
-           Serial.println("rotate for 180°");
-           servo1.write(180);//引数は角度(°)
-           delay(5000);
-           servo1.write(0);
-           break;
-
-        case 'm':
-           Serial.println("forward");
-           forward();
-           delay(5000);
-           Serial.println("rotating");
-           rotating();
-           delay(5000);
-           Serial.println("reverse_rotating");
-           reverse_rotating();
-           delay(5000);
-           break;           
-           
-        default:
-           Serial.println("The key you typed is not the right key!");
-           break;
-       }
-    }
 
     // シリアルモニタにセンサー値を表示
     Serial.print(gps_time);
@@ -361,5 +324,42 @@ void loop()
     SensorData.print(",");
     SensorData.println(ultra_distance);
     SensorData.flush();
+    }
   } // "if(Serial1.available()>0)"の閉じ
+  if(Serial.available()>0)//何かキーが押されたら
+  {
+     key = Serial.read();
+     switch(key){
+      case 'p':
+         Serial.println("WARNING: 9v voltage on\n");
+         digitalWrite(cutparac, HIGH); //オン
+         delay(outputcutsecond*1000);//電流を流す
+         Serial.println("9v voltage off.\n");
+         digitalWrite(cutparac, LOW); //オフ
+         break;
+
+      case 's':
+         Serial.println("rotate for 180°");
+         servo1.write(180);//引数は角度(°)
+         delay(5000);
+         servo1.write(0);
+         break;
+
+      case 'm':
+         Serial.println("forward");
+         forward();
+         delay(5000);
+         Serial.println("rotating");
+         rotating();
+         delay(5000);
+         Serial.println("reverse_rotating");
+         reverse_rotating();
+         delay(5000);
+         break;           
+         
+      default:
+         Serial.println("The key you typed is not the right key!");
+         break;
+     }
+  }
 } // loop関数の閉じ
