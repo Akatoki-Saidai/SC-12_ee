@@ -169,7 +169,7 @@ void setup()
   while (CalibrationCounter < 551)
   {
     Vector norm = compass.readNormalize();
-    rotating(); // testcodeでは手動で回す．
+    rotating();
     if (CalibrationCounter == 550)
     {
       stoppage();
