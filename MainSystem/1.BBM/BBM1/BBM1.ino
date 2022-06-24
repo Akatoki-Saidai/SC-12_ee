@@ -191,7 +191,7 @@ void setup()
   pinMode( trigPin, OUTPUT );
 
   //for servomoter
-  servo1.init(19,1);
+  servo1.init(19,4);
 
   // for parachute
   pinMode(cutparac, OUTPUT);      // 切り離し用トランジスタの出力宣言
@@ -331,30 +331,39 @@ void loop()
      key = Serial.read();
      switch(key){
       case 'p':
-         Serial.println("WARNING: 9v voltage on\n");
+         stoppage();
+         Serial.println("WARNING: 9v voltage on");
          digitalWrite(cutparac, HIGH); //オン
          delay(outputcutsecond*1000);//電流を流す
-         Serial.println("9v voltage off.\n");
+         Serial.println("9v voltage off");
          digitalWrite(cutparac, LOW); //オフ
          break;
 
       case 's':
+         stoppage();
          Serial.println("rotate for 180°");
-         servo1.write(180);//引数は角度(°)
-         delay(5000);
-         servo1.write(0);
+         servo1.write(10);// 引数は角度(°)(角度=0とすると動作が不安定になる)
+         stoppage();
+         delay(3000);
+         servo1.write(180);
+         stoppage();
+         delay(3000);
+         servo1.write(10);
          break;
 
       case 'm':
          Serial.println("forward");
          forward();
          delay(5000);
+         stoppage();
          Serial.println("rotating");
          rotating();
          delay(5000);
+         stoppage();
          Serial.println("reverse_rotating");
          reverse_rotating();
          delay(5000);
+         stoppage();
          break;           
          
       default:
