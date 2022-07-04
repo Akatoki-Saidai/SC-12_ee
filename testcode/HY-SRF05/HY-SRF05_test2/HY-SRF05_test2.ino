@@ -2,14 +2,14 @@
  * ESP-WROOM-02/32
  */
  
-#define echoPin 16 // Echo Pin
-#define trigPin 17 // Trigger Pin
+#define echoPin 35 // Echo Pin
+#define trigPin 4 // Trigger Pin
  
 double Duration = 0; //受信した間隔
 double Distance = 0; //距離
  
 void setup() {
-Serial.begin( 115200 );//Arduino Unoは9600,ESPで試す場合はは115200
+Serial.begin( 115200 );//Arduino Unoは9600,ESPで試す場合は115200
 pinMode( echoPin, INPUT );
 pinMode( trigPin, OUTPUT );
 }
