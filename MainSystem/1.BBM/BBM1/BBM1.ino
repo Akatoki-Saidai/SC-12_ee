@@ -185,7 +185,7 @@ void setup()
     }
   }
   // GY-271のキャリブレーション終了
-
+  
   // for HY-SRF05
   pinMode( echoPin, INPUT );
   pinMode( trigPin, OUTPUT );
