@@ -14,9 +14,9 @@
 #include <Wire.h>
 #include <DFRobot_QMC5883.h>
 
-void DFRobot(){
+//void DFRobot(){
   DFRobot_QMC5883 compass;
-}
+//}
 
 int n1 = 0;
 int n2 = 0;
@@ -49,7 +49,7 @@ void setup()
   }
 void loop()
 {
-DFRobot();
+//DFRobot();
   if(n1 < 500){
 
     //================= 仮の待機時間 ==================
@@ -64,10 +64,10 @@ DFRobot();
     n1 = n1 + 1;
     delay(10);
   }
-  //=================
+  //=================地磁気使用開始====================
   else{
     if(n2 == 1){
-      while (!compass.begin()){
+    while (!compass.begin()){
       Serial.println("Could not find a valid QMC5883 sensor, check wiring!");
       delay(500);
     }
@@ -124,7 +124,7 @@ DFRobot();
     //Serial.print("Heading = ");
     //Serial.print(heading);
     //Serial.print(",");
-    Serial.println(headingDegrees);
+    //Serial.println(headingDegrees);
     //Serial.println();
   
     //delay(10);
