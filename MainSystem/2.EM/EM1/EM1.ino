@@ -37,8 +37,8 @@ File SensorData;
 const int sck = 13, miso = 15, mosi = 14, ss = 27;
 
 // for HY-SRF05
-#define echoPin 16 // Echo Pin
-#define trigPin 17 // Trigger Pin
+#define echoPin 35 // Echo Pin
+#define trigPin 4 // Trigger Pin
 double Duration = 0; // 受信した間隔
 
 // センサー値を格納するための変数
