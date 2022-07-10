@@ -1,4 +1,4 @@
-int cutparac = 32;          //切り離し用トランジスタのピン番号の宣言
+int cutparac = 23;          //切り離し用トランジスタのピン番号の宣言
 int outputcutsecond = 10;    //切り離し時の9V電圧を流す時間，単位はsecond
 
 
