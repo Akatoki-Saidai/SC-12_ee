@@ -94,6 +94,9 @@ int outputcutsecond = 3;    // 切り離し時の9V電圧を流す時間，単�
 int phase_state = 0;
 char key = '0';
 
+// for ガイガーカウンタ
+char data;
+
 void setup()
 {
   // for GPS
@@ -106,11 +109,14 @@ void setup()
   SensorData = SD.open("/SensorData.csv", FILE_APPEND);
   CanSatLogData.println("START_RECORD");
   CanSatLogData.flush();
-  SensorData.println("gps_time,gps_latitude,gps_longitude,gps_velocity,Temperature,Pressure,Humid,accelX,accelY,accelZ,Angle_gy271,ultra_distance");
+  SensorData.println("gps_time,gps_latitude,gps_longitude,gps_velocity,Temperature,Pressure,Humid,accelX,accelY,accelZ,Angle_gy271,ultra_distance,data");
   SensorData.flush();
 
   // for Serial communication
   Serial.begin(115200); // PC-ESP32間のシリアル通信開始
+
+  // for ガイガーカウンタ
+  Serial2.begin(38400, SERIAL_8N1,34,12); // ESP32-ガイガーカウンタのシリアル通信開始
   
   // for MPU6050
   mySensor.beginAccel();
@@ -267,6 +273,12 @@ void loop()
         }
         Angle_gy271 = Sum_headingDegrees / 15;     
 
+        // for ガイガーカウンタ
+        while(Serial2.available()){
+          char data = Serial2.read();
+          Serial.print(data);
+        }
+
     
     if(phase_state != 3)
     {
@@ -297,7 +309,9 @@ void loop()
     Serial.print(",");
     Serial.print(Angle_gy271);
     Serial.print(",");
-    Serial.println(ultra_distance);
+    Serial.print(ultra_distance);
+    Serial.print(",");
+    Serial.println(data);
 
     // SDカードへデータを保存
     SensorData.print(gps_time);
@@ -322,7 +336,9 @@ void loop()
     SensorData.print(",");
     SensorData.print(Angle_gy271);
     SensorData.print(",");
-    SensorData.println(ultra_distance);
+    SensorData.print(ultra_distance);
+    SensorData.print(",");
+    SensorData.println(data);
     SensorData.flush();
     }
   } // "if(Serial1.available()>0)"の閉じ

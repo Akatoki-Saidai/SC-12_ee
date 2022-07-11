@@ -94,6 +94,9 @@ int outputcutsecond = 3;    // 切り離し時の9V電圧を流す時間，単�
 int phase_state = 0;
 char key = '0';
 
+// for ガイガーカウンタ
+char data;
+
 void setup()
 {
   // for GPS
@@ -106,11 +109,14 @@ void setup()
   SensorData = SD.open("/SensorData.csv", FILE_APPEND);
   CanSatLogData.println("START_RECORD");
   CanSatLogData.flush();
-  SensorData.println("gps_time,gps_latitude,gps_longitude,gps_velocity,Temperature,Pressure,Humid,accelX,accelY,accelZ,Angle_gy271,ultra_distance");
+  SensorData.println("gps_time,gps_latitude,gps_longitude,gps_velocity,Temperature,Pressure,Humid,accelX,accelY,accelZ,Angle_gy271,ultra_distance,data");
   SensorData.flush();
 
   // for Serial communication
-  Serial.begin(115200); // PC-ESP32間のシリアル通信開始
+  Serial2.begin(115200, SERIAL_8N1,16,17); // ESP32-twelite間のシリアル通信開始
+
+  // for ガイガーカウンタ
+  Serial.begin(38400, SERIAL_8N1,34,12); // ESP32-ガイガーカウンタ間のシリアル通信開始
   
   // for MPU6050
   mySensor.beginAccel();
@@ -142,12 +148,12 @@ void setup()
   // GY-271の初期化
   while (!compass.begin())
   {
-    Serial.println("Could not find a valid QMC5883 sensor, check wiring!");
+    Serial2.println("Could not find a valid QMC5883 sensor, check wiring!");
     delay(500);
   }
   if (compass.isHMC())
   {
-    Serial.println("Initialize HMC5883");
+    Serial2.println("Initialize HMC5883");
     compass.setRange(HMC5883L_RANGE_1_3GA);
     compass.setMeasurementMode(HMC5883L_CONTINOUS);
     compass.setDataRate(HMC5883L_DATARATE_15HZ);
@@ -155,7 +161,7 @@ void setup()
   }
   else if (compass.isQMC())
   {
-    Serial.println("Initialize QMC5883");
+    Serial2.println("Initialize QMC5883");
     compass.setRange(QMC5883_RANGE_2GA);
     compass.setMeasurementMode(QMC5883_CONTINOUS);
     compass.setDataRate(QMC5883_DATARATE_50HZ);
@@ -165,7 +171,7 @@ void setup()
   
   // GY-271のキャリブレーション
   delay(100);
-  Serial.println("calibration rotating!");
+  Serial2.println("calibration rotating!");
   while (CalibrationCounter < 551)
   {
     Vector norm = compass.readNormalize();
@@ -173,15 +179,15 @@ void setup()
     if (CalibrationCounter == 550)
     {
       stoppage();
-      Serial.println("calibration stopping!");
+      Serial2.println("calibration stopping!");
       delay(2000);
       CalibrationCounter = CalibrationCounter + 1;
     }
     else
     {
       CalibrationCounter = CalibrationCounter + 1;
-      Serial.print("CalibrationCounter = ");
-      Serial.println(CalibrationCounter);
+      Serial2.print("CalibrationCounter = ");
+      Serial2.println(CalibrationCounter);
     }
   }
   // GY-271のキャリブレーション終了
@@ -267,37 +273,45 @@ void loop()
         }
         Angle_gy271 = Sum_headingDegrees / 15;     
 
+        // for ガイガーカウンタ
+        while(Serial.available()){
+          char data = Serial.read();
+          Serial.print(data);
+        }
+
     
     if(phase_state != 3)
     {
-      Serial.println("Press the 'p','s' or 'm' key!");
+      Serial2.println("Press the 'p','s' or 'm' key!");
     }
     phase_state = 3;
 
-    // シリアルモニタにセンサー値を表示
-    Serial.print(gps_time);
-    Serial.print(",");
-    Serial.print(gps_latitude, 9);
-    Serial.print(",");
-    Serial.print(gps_longitude, 9);
-    Serial.print(",");
-    Serial.print(gps_velocity);
-    Serial.print(",");
-    Serial.print(Temperature);
-    Serial.print(",");
-    Serial.print(Pressure);
-    Serial.print(",");
-    Serial.print(Humid);
-    Serial.print(",");
-    Serial.print(accelX);
-    Serial.print(",");
-    Serial.print(accelY);
-    Serial.print(",");
-    Serial.print(accelZ);
-    Serial.print(",");
-    Serial.print(Angle_gy271);
-    Serial.print(",");
-    Serial.println(ultra_distance);
+    // センサー値を送信
+    Serial2.print(gps_time);
+    Serial2.print(",");
+    Serial2.print(gps_latitude, 9);
+    Serial2.print(",");
+    Serial2.print(gps_longitude, 9);
+    Serial2.print(",");
+    Serial2.print(gps_velocity);
+    Serial2.print(",");
+    Serial2.print(Temperature);
+    Serial2.print(",");
+    Serial2.print(Pressure);
+    Serial2.print(",");
+    Serial2.print(Humid);
+    Serial2.print(",");
+    Serial2.print(accelX);
+    Serial2.print(",");
+    Serial2.print(accelY);
+    Serial2.print(",");
+    Serial2.print(accelZ);
+    Serial2.print(",");
+    Serial2.print(Angle_gy271);
+    Serial2.print(",");
+    Serial2.print(ultra_distance);
+    Serial2.print(",");
+    Serial2.println(data);
 
     // SDカードへデータを保存
     SensorData.print(gps_time);
@@ -322,26 +336,28 @@ void loop()
     SensorData.print(",");
     SensorData.print(Angle_gy271);
     SensorData.print(",");
-    SensorData.println(ultra_distance);
+    SensorData.print(ultra_distance);
+    SensorData.print(",");
+    SensorData.println(data);
     SensorData.flush();
     }
   } // "if(Serial1.available()>0)"の閉じ
-  if(Serial.available()>0)//何かキーが押されたら
+  if(Serial2.available()>0)//何かキーが押されたら
   {
-     key = Serial.read();
+     key = Serial2.read();
      switch(key){
       case 'p':
          stoppage();
-         Serial.println("WARNING: 9v voltage on");
+         Serial2.println("WARNING: 9v voltage on");
          digitalWrite(cutparac, HIGH); //オン
          delay(outputcutsecond*1000);//電流を流す
-         Serial.println("9v voltage off");
+         Serial2.println("9v voltage off");
          digitalWrite(cutparac, LOW); //オフ
          break;
 
       case 's':
          stoppage();
-         Serial.println("rotate for 180°");
+         Serial2.println("rotate for 180°");
          servo1.write(10);// 引数は角度(°)(角度=0とすると動作が不安定になる)
          stoppage();
          delay(3000);
@@ -352,22 +368,22 @@ void loop()
          break;
 
       case 'm':
-         Serial.println("forward");
+         Serial2.println("forward");
          forward();
          delay(5000);
          stoppage();
-         Serial.println("rotating");
+         Serial2.println("rotating");
          rotating();
          delay(5000);
          stoppage();
-         Serial.println("reverse_rotating");
+         Serial2.println("reverse_rotating");
          reverse_rotating();
          delay(5000);
          stoppage();
          break;           
          
       default:
-         Serial.println("The key you typed is not the right key!");
+         Serial2.println("The key you typed is not the right key!");
          break;
      }
   }
