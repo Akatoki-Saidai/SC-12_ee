@@ -109,7 +109,7 @@ void setup()
   SensorData = SD.open("/SensorData.csv", FILE_APPEND);
   CanSatLogData.println("START_RECORD");
   CanSatLogData.flush();
-  SensorData.println("gps_time,gps_latitude,gps_longitude,gps_velocity,Temperature,Pressure,Humid,accelX,accelY,accelZ,Angle_gy271,ultra_distance,data");
+  SensorData.println("gps_time,gps_latitude,gps_longitude,gps_velocity,Temperature,Pressure,Humid,accelX,accelY,accelZ,Angle_gy271,ultra_distance");
   SensorData.flush();
 
   // for Serial communication
@@ -309,9 +309,7 @@ void loop()
     Serial2.print(",");
     Serial2.print(Angle_gy271);
     Serial2.print(",");
-    Serial2.print(ultra_distance);
-    Serial2.print(",");
-    Serial2.println(data);
+    Serial2.println(ultra_distance);
 
     // SDカードへデータを保存
     SensorData.print(gps_time);
@@ -336,9 +334,7 @@ void loop()
     SensorData.print(",");
     SensorData.print(Angle_gy271);
     SensorData.print(",");
-    SensorData.print(ultra_distance);
-    SensorData.print(",");
-    SensorData.println(data);
+    SensorData.println(ultra_distance);
     SensorData.flush();
     }
   } // "if(Serial1.available()>0)"の閉じ
