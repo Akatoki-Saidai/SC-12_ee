@@ -106,10 +106,25 @@ ESP_servo servo1;
 // for phase
 int phase = 4;// EM1では遠距離，中距離，近距離のみ
 int phase_state = 0;
+unsigned long currentMillis;
 
 // for phase1
+int mode_comparison,mode_to_bmp,count1,count3;
+double altitude_sum_bmp,altitude,previous_altitude,current_altitude;
+unsigned long previous_millis,current_millis;
 
 // for phase2
+int type = 1;
+int yeah = 1;
+int type_state = 0;
+double time3_2; // 時間に関するもの
+double Accel[6];                  // 計測した値をおいておく変数
+double Altitude[6];               // 高度
+double Preac, differ1, Acsum, Acave, RealDiffer1;
+double Preal, differ2, Alsum, Alave, RealDiffer2;
+int i_3 = 0;
+int j_3 = 0;
+double RealDiffer;
 
 // for phase3
 int cutparac = 23;          // 切り離し用トランジスタのピン番号の宣言
@@ -131,7 +146,7 @@ double current_distance,previous_distance,distance1,distance2;
 unsigned long current_Millis,time1,time2;
 int phase_5,count;
 
-//緯度経度から距離を返す関数
+// 緯度経度から距離を返す関数
 double CalculateDis(double GOAL_lng, double GOAL_lat, double gps_longitude, double gps_latitude)
 {
 
@@ -143,7 +158,7 @@ double CalculateDis(double GOAL_lng, double GOAL_lat, double gps_longitude, doub
 
   double EarthRadius = 6378.137;
 
-  //目標地点までの距離を導出
+  // 目標地点までの距離を導出
   delta_lng = GOAL_lng - gps_longitude;
 
   distance = EarthRadius * acos(sin(gps_latitude) * sin(GOAL_lat) + cos(gps_latitude) * cos(GOAL_lat) * cos(delta_lng)) * 1000;
@@ -151,7 +166,7 @@ double CalculateDis(double GOAL_lng, double GOAL_lat, double gps_longitude, doub
   return distance;
 }
 
-//角度計算用の関数
+// 角度計算用の関数
 double CalculateAngle(double GOAL_lng, double GOAL_lat, double gps_longitude, double gps_latitude)
 {
 
@@ -161,7 +176,7 @@ double CalculateAngle(double GOAL_lng, double GOAL_lat, double gps_longitude, do
   gps_longitude = deg2rad(gps_longitude);
   gps_latitude = deg2rad(gps_latitude);
 
-  //目標地点までの角度を導出
+  // 目標地点までの角度を導出
   delta_lng = GOAL_lng - gps_longitude;
   azimuth = rad2deg(atan2(sin(delta_lng), cos(gps_latitude) * tan(GOAL_lat) - sin(gps_latitude) * cos(delta_lng)));
 
@@ -228,7 +243,7 @@ void setup()
   pinMode( echoPin, INPUT );
   pinMode( trigPin, OUTPUT );
 
-  //for servomoter
+  // for servomoter
   servo1.init(19,4);
 
   // for parachute
@@ -245,11 +260,15 @@ void loop()
     gps.encode(c);
     if (gps.location.isUpdated()) // この中でGPSのデータを使わないと，うまく値が表示されない
     { 
+        //現在時刻を保存
+        currentMillis = millis();
+        
         // センサー値取得
         // for BME280
         Temperature = bme.readTemperature();
         Pressure = bme.readPressure() / 100.0;
         Humid = bme.readHumidity();
+        altitude = ( ( pow( 1013.25 /Pressure , 1/5.257) - 1 ) * ( Temperature + 273.15 ) ) / 0.0065;
 
         // for MPU6050
         mySensor.accelUpdate();
@@ -275,7 +294,7 @@ void loop()
         digitalWrite( trigPin, LOW ); // 超音波を停止      
         Duration = pulseIn( echoPin, HIGH ); // センサからの入力
         if (Duration > 0) {
-          Duration = Duration/2; //往復距離を半分にする
+          Duration = Duration/2; // 往復距離を半分にする
           ultra_distance = Duration*340*100/1000000; // 音速を340m/sに設定
         } 
 
@@ -302,6 +321,67 @@ void loop()
               phase_state = 1;
             }
 
+            if (mode_to_bmp == 0)
+            {
+              if (accelZ < -2)
+              { //落下開始をまずMPUで判定
+                count1++;
+                if (count1 == 1)
+                {
+                  count1 = 0;
+                  CanSatLogData.println(gps_time);
+                  CanSatLogData.println("FALL STARTED(by MPU)\n");
+                  CanSatLogData.flush();
+                  mode_to_bmp = 1;
+                }
+              }
+            }
+            else
+            {
+              switch (mode_comparison)
+              { //落下開始をBMPで判定
+                case 0:
+                  previous_millis = millis();
+                  altitude_sum_bmp += altitude;
+                  count3++;
+                  if (count3 == 5)
+                  {
+                    previous_altitude = altitude_sum_bmp / 5;
+                    altitude_sum_bmp = 0;
+                    count3 = 0;
+                    mode_comparison = 1;
+                  }
+                  break;
+
+                case 1: // 500ms後
+                  current_millis = millis();
+                  if (current_millis - previous_millis >= 500)
+                  {
+                    altitude_sum_bmp += altitude;
+                    count3++;
+                    if (count3 == 5)
+                    {
+                      current_altitude = altitude_sum_bmp / 5;
+                      CanSatLogData.println("current_altitude - previous_altitude = \n");
+                      CanSatLogData.println(current_altitude - previous_altitude);
+                      if (current_altitude - previous_altitude <= -1.0)
+                      {
+                        CanSatLogData.println("FALL STARTED(by BMP)\n");
+                        CanSatLogData.flush();
+                        phase = 2;
+                      }
+                      else
+                      {
+                        altitude_sum_bmp = 0;
+                        count3 = 0;
+                        mode_comparison = 0;
+                      }
+                    }
+                  }
+                  break;
+              }
+            }
+            
             break;
 
           //########## 落下フェーズ ##########
@@ -314,9 +394,84 @@ void loop()
               CanSatLogData.println("Phase2: transition completed");
               CanSatLogData.flush();
 
+              i_3 = 0;
+              j_3 = 0;
+              Preac = 0; // 1個前の加速度を記憶
+              Preal = 0;
+              differ1 = 0.1;   // 加速度　移動平均の差
+              differ2 = 0.5;   // 高度　　移動平均の差
+              Acave = 0;       // 加速度　5個の平均値
+              Alave = 0;       // 高度　　5個の平均値
+              Acsum = 0;       // 加速度　5個の合計値
+              Alsum = 0;       // 高度　　5個の合計値
+              RealDiffer1 = 0; // 1秒前との差を記憶する
+              RealDiffer2 = 0;
+
               phase_state = 2;
             }
-
+            if (yeah == 1)
+            { // データを初めから五個得るまで
+              Accel[i_3] = accelSqrt;
+              Altitude[i_3] = altitude;
+              i_3 = i_3 + 1;
+              if (i_3 == 6)
+              { // 5個得たらその時点での平均値を出し，次のフェーズへ
+                yeah = 2;
+                i_3 = 0; // iの値をリセット
+                for (j_3 = 1; j_3 < 6; j_3++)
+                { // j_3=0の値は非常に誤差が大きいので1から
+                  Acsum = Acsum + Accel[j_3];
+                  Alsum = Alsum + Altitude[j_3];
+                }
+                Acave = Acsum / 5;
+                Alave = Alave / 5;
+                time3_2 = currentMillis;
+              }
+            }
+            else
+            {
+              Preac = Acave;
+              Preal = Alave;
+              Accel[i_3] = accelSqrt;
+              Altitude[i_3] = altitude;
+              for (j_3 = 0; j_3 < 5; j_3++)
+              {
+                Acsum = Acsum + Accel[j_3];
+                Alsum = Alsum + Altitude[j_3];
+              }
+              Acave = Acsum / 5;
+              Alave = Alsum / 5;
+              RealDiffer1 = Preac - Acave;
+              RealDiffer2 = Preal - Alave;
+              if (i_3 == 5)
+              {
+                i_3 = 0;
+                Acsum = 0;
+                Alsum = 0;
+              }
+              else
+              {
+                i_3 = i_3 + 1;
+                Acsum = 0;
+                Alsum = 0;
+              }
+              if (currentMillis - time3_2 > 1000)
+              {
+                if (RealDiffer1 < differ1)
+                { // 移動平均が基準以内の変化量だった時
+                  phase = 3;
+                }
+                else if (RealDiffer2 < differ2)
+                {
+                  phase = 3;
+                }
+                else
+                {
+                  time3_2 = currentMillis;
+                }
+              }
+            }
+            
             break;
 
           //########## 分離フェーズ ##########
@@ -350,7 +505,7 @@ void loop()
               CanSatLogData.println("Phase4: transition completed");
               CanSatLogData.flush();
 
-              //台の位置を調整
+              // 台の位置を調整
               if(accelZ < -0.95){
                 servo1.write(170);//引数は角度(°)
                 delay(1000);
@@ -384,7 +539,7 @@ void loop()
               }
               // GY-271の初期化終了
 
-              //パラシュートと絡まらないように3秒間前進
+              // パラシュートと絡まらないように3秒間前進
               forward();
               delay(3000);
               
@@ -414,7 +569,7 @@ void loop()
               phase_state = 4;
             }
             
-            CurrentDistance = CalculateDis(GOAL_lng, GOAL_lat, gps_longitude, gps_latitude); //現在位置とゴールとの距離を計算
+            CurrentDistance = CalculateDis(GOAL_lng, GOAL_lat, gps_longitude, gps_latitude); // 現在位置とゴールとの距離を計算
 
             if (desiredDistance >= CurrentDistance)
             {
