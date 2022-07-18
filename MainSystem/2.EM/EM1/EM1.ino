@@ -22,8 +22,8 @@ Adafruit_BME280 bme;
 TinyGPSPlus gps;
 double delta_lng,distance,azimuth;
 // you need to set up variables at first
-double GOAL_lat = 35.860545000;
-double GOAL_lng = 139.606940001;
+double GOAL_lat = 35.860568333;
+double GOAL_lng = 139.606675000;
 
 // for GY-271
 #include <DFRobot_QMC5883.h>
@@ -59,10 +59,10 @@ char data; // for ガイガーカウンタ
 // 前進
 void forward()
 {
-  ledcWrite(0, 0); // channel, duty
-  ledcWrite(1, 200);
-  ledcWrite(2, 0);
-  ledcWrite(3, 200);
+  ledcWrite(0, 150); // channel, duty
+  ledcWrite(1, 0);
+  ledcWrite(2, 150);
+  ledcWrite(3, 0);
 }
 // 停止
 void off()
@@ -75,26 +75,26 @@ void off()
 // 回転
 void rotating()
 {
-  ledcWrite(0, 0);
-  ledcWrite(1, 200);
-  ledcWrite(2, 200);
-  ledcWrite(3, 0);
+  ledcWrite(0, 255);
+  ledcWrite(1, 0);
+  ledcWrite(2, 0);
+  ledcWrite(3, 255);
 }
 //ゆっくり回転
 void slow_rotating()
 {
   ledcWrite(0, 0);
-  ledcWrite(1, 100);
-  ledcWrite(2, 100);
+  ledcWrite(1, 200);
+  ledcWrite(2, 200);
   ledcWrite(3, 0);
 }
 // 反回転
 void reverse_rotating()
 {
-  ledcWrite(0, 200);
-  ledcWrite(1, 0);
-  ledcWrite(2, 0);
-  ledcWrite(3, 200);
+  ledcWrite(0, 0);
+  ledcWrite(1, 255);
+  ledcWrite(2, 255);
+  ledcWrite(3, 0);
 }
 
 // for servomoter
@@ -194,7 +194,7 @@ double CalculateAngle(double GOAL_lng, double GOAL_lat, double gps_longitude, do
 void setup()
 {
   // for GPS
-  Serial1.begin(9600, SERIAL_8N1, 5, 18); // ESP32-GPS間のシリアル通信開始
+  Serial1.begin(115200, SERIAL_8N1, 5, 18); // ESP32-GPS間のシリアル通信開始
   
   // SD Card initialization
   SPI.begin(sck, miso, mosi, ss);
@@ -540,7 +540,7 @@ void loop()
               // GY-271の初期化終了
 
               // パラシュートと絡まらないように3秒間前進
-              forward();
+              //forward();
               delay(3000);
               
               // GY-271のキャリブレーション
@@ -549,10 +549,10 @@ void loop()
               while (CalibrationCounter < 551)
               {
                 Vector norm = compass.readNormalize();
-                rotating();
+                //rotating();
                 if (CalibrationCounter == 550)
                 {
-                  off();
+                  //off();
                   Serial2.println("calibration stopping!");
                   delay(2000);
                   CalibrationCounter = CalibrationCounter + 1;
@@ -577,9 +577,9 @@ void loop()
               phase = 5;
             }else{
               delay(100);
-              forward();
+              //forward();
               delay(1000);
-              off();
+              //off();
               // Goalまでの偏角を計算する
               Angle_Goal = CalculateAngle(GOAL_lng, GOAL_lat, gps_longitude, gps_latitude);
   
@@ -630,16 +630,16 @@ void loop()
               if (rrAngle > llAngle){
                 //反時計回り
                 if (llAngle > 20){
-                  rotating();
+                  //rotating();
                   delay(500);
-                  off();
+                  //off();
                 }
               }else{
                 //時計回り
                 if (rrAngle > 20){
-                  reverse_rotating();
+                  //reverse_rotating();
                   delay(500);
-                  off();
+                  //off();
                 }
               }
             }
@@ -686,7 +686,7 @@ void loop()
               Angle_Goal = CalculateAngle(GOAL_lng, GOAL_lat, gps_longitude, gps_latitude);
   
               // ゆっくり回転開始
-              slow_rotating();
+              //slow_rotating();
   
               Vector norm = compass.readNormalize();
               heading = atan2(norm.YAxis, norm.XAxis);
@@ -734,13 +734,13 @@ void loop()
               }
               
               //回転停止
-              off();
+              //off();
   
               //少し進む
               delay(100);
-              forward();
+              //forward();
               delay(1000);
-              off();
+              //off();
             }
             break;
 
@@ -776,13 +776,13 @@ void loop()
                 
                 delay(100);
                 //ゆっくり回転開始
-                slow_rotating();
+                //slow_rotating();
                 
                 if (ultra_distance < 600 && ultra_distance != 0)
                 {
                   phase_5 = 2;
                   //何か物体を検知したら回転停止
-                  off();
+                  //off();
                   Serial2.println("STOP!");
                   CanSatLogData.println("-----------------------");
                   CanSatLogData.println("STOP PHASE");
@@ -806,7 +806,7 @@ void loop()
                   time1 = millis();
                   distance1 = current_distance;
                   count = 0;
-                  forward();
+                  //forward();
                 }
                 previous_distance = current_distance;
     
@@ -822,10 +822,10 @@ void loop()
                 CanSatLogData.println("moving for 1000[ms]");
                 CanSatLogData.flush();
                 time2 = millis();
-                forward();
+                //forward();
                 if (time2 - time1 >= 1000) //1秒間前進したら
                 {
-                  off();
+                  //off();
                   phase_5 = 4;
                 }
                 break;
