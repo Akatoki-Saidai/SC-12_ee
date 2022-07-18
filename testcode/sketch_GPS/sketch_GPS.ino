@@ -4,7 +4,7 @@ TinyGPSPlus gps;
 
 void setup() {
   Serial.begin(115200);
-  Serial1.begin(9600,SERIAL_8N1,5,18);
+  Serial1.begin(115200,SERIAL_8N1,5,18);
 }
 
 void loop() {
