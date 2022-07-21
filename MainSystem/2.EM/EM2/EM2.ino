@@ -109,8 +109,12 @@ int phase_state = 0;
 unsigned long currentMillis;
 
 // for phase1
-int mode_comparison,mode_to_bmp,count1,count3;
-double altitude_sum_bmp,altitude,previous_altitude,current_altitude;
+int mode_comparison = 0;
+int mode_to_bmp = 0;
+int count1 = 0;
+int count3 = 0;
+double altitude_sum_bmp = 0;
+double altitude,previous_altitude,current_altitude;
 unsigned long previous_millis,current_millis;
 
 // for phase2
@@ -138,13 +142,14 @@ double Angle_Goal,rrAngle,llAngle;
 // for phase5
 double sum_latitude,sum_longitude;
 unsigned long nowmillis;
-int sum_count;
+int sum_count = 0;
 int EPSILON = 30;
 
 // for phase6
 double current_distance,previous_distance,distance1,distance2;
 unsigned long current_Millis,time1,time2;
-int phase_5,count;
+int phase_5 = 1;
+int count = 0;
 
 // for phase7
 
@@ -277,10 +282,13 @@ void loop()
         mySensor.accelUpdate();
         if (mySensor.accelUpdate() == 0)
         {
-          accelX = mySensor.accelX() + 0;
-          accelY = mySensor.accelY() + 0;
-          accelZ = mySensor.accelZ() + 0;
+          accelX = mySensor.accelX();
+          accelY = mySensor.accelY();
+          accelZ = mySensor.accelZ();
           accelSqrt = mySensor.accelSqrt();
+          if(fabs(accelZ)>2.0){
+            ESP.restart();
+          }
         }
 
         // for GPS
@@ -543,7 +551,7 @@ void loop()
               // GY-271の初期化終了
 
               // パラシュートと絡まらないように3秒間前進
-              //forward();
+              forward();
               delay(3000);
               
               // GY-271のキャリブレーション
@@ -552,10 +560,10 @@ void loop()
               while (CalibrationCounter < 551)
               {
                 Vector norm = compass.readNormalize();
-                //rotating();
+                rotating();
                 if (CalibrationCounter == 550)
                 {
-                  //off();
+                  off();
                   Serial2.println("calibration stopping!");
                   delay(2000);
                   CalibrationCounter = CalibrationCounter + 1;
@@ -580,9 +588,9 @@ void loop()
               phase = 5;
             }else{
               delay(100);
-              //forward();
+              forward();
               delay(1000);
-              //off();
+              off();
               // Goalまでの偏角を計算する
               Angle_Goal = CalculateAngle(GOAL_lng, GOAL_lat, gps_longitude, gps_latitude);
   
@@ -633,16 +641,16 @@ void loop()
               if (rrAngle > llAngle){
                 //反時計回り
                 if (llAngle > 20){
-                  //rotating();
+                  rotating();
                   delay(500);
-                  //off();
+                  off();
                 }
               }else{
                 //時計回り
                 if (rrAngle > 20){
-                  //reverse_rotating();
+                  reverse_rotating();
                   delay(500);
-                  //off();
+                  off();
                 }
               }
             }
@@ -689,7 +697,7 @@ void loop()
               Angle_Goal = CalculateAngle(GOAL_lng, GOAL_lat, gps_longitude, gps_latitude);
   
               // ゆっくり回転開始
-              //slow_rotating();
+              slow_rotating();
   
               Vector norm = compass.readNormalize();
               heading = atan2(norm.YAxis, norm.XAxis);
@@ -737,13 +745,13 @@ void loop()
               }
               
               //回転停止
-              //off();
+              off();
   
               //少し進む
               delay(100);
-              //forward();
+              forward();
               delay(1000);
-              //off();
+              off();
             }
             break;
 
@@ -779,13 +787,13 @@ void loop()
                 
                 delay(100);
                 //ゆっくり回転開始
-                //slow_rotating();
+                slow_rotating();
                 
                 if (ultra_distance < 600 && ultra_distance != 0)
                 {
                   phase_5 = 2;
                   //何か物体を検知したら回転停止
-                  //off();
+                  off();
                   Serial2.println("STOP!");
                   CanSatLogData.println("-----------------------");
                   CanSatLogData.println("STOP PHASE");
@@ -809,7 +817,7 @@ void loop()
                   time1 = millis();
                   distance1 = current_distance;
                   count = 0;
-                  //forward();
+                  forward();
                 }
                 previous_distance = current_distance;
     
@@ -825,10 +833,10 @@ void loop()
                 CanSatLogData.println("moving for 1000[ms]");
                 CanSatLogData.flush();
                 time2 = millis();
-                //forward();
+                forward();
                 if (time2 - time1 >= 1000) //1秒間前進したら
                 {
-                  //off();
+                  off();
                   phase_5 = 4;
                 }
                 break;
