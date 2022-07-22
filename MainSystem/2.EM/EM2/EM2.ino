@@ -56,13 +56,37 @@ double ultra_distance = 0; // for HY-SRF05
 char data; // for ガイガーカウンタ
 
 // for motor
+//ゆっくり加速
+void accel()
+{
+  for (int i = 0; i < 255; i = i + 5)
+  {
+    ledcWrite(0, 0);
+    ledcWrite(1, i);
+    ledcWrite(2, 0);
+    ledcWrite(3, i);
+    delay(80); // accelではdelay使う
+  }
+}
 // 前進
 void forward()
 {
-  ledcWrite(0, 150); // channel, duty
+  ledcWrite(0, 255); // channel, duty
   ledcWrite(1, 0);
-  ledcWrite(2, 150);
+  ledcWrite(2, 255);
   ledcWrite(3, 0);
+}
+//ゆっくり停止
+void brake()
+{
+  for (int i = 255; i > 0; i = i - 5)
+  {
+    ledcWrite(0, 0);
+    ledcWrite(1, i);
+    ledcWrite(2, 0);
+    ledcWrite(3, i);
+    delay(80); // stoppingではdelay使う
+  }
 }
 // 停止
 void off()
@@ -72,28 +96,28 @@ void off()
   ledcWrite(2, 0);
   ledcWrite(3, 0);
 }
-// 回転
-void rotating()
-{
-  ledcWrite(0, 255);
-  ledcWrite(1, 0);
-  ledcWrite(2, 0);
-  ledcWrite(3, 255);
-}
 //ゆっくり回転
 void slow_rotating()
 {
   ledcWrite(0, 0);
-  ledcWrite(1, 200);
-  ledcWrite(2, 200);
+  ledcWrite(1, 100);
+  ledcWrite(2, 100);
   ledcWrite(3, 0);
+}
+// 回転
+void rotating()
+{
+  ledcWrite(0, 150);
+  ledcWrite(1, 0);
+  ledcWrite(2, 0);
+  ledcWrite(3, 150);
 }
 // 反回転
 void reverse_rotating()
 {
   ledcWrite(0, 0);
-  ledcWrite(1, 255);
-  ledcWrite(2, 255);
+  ledcWrite(1, 150);
+  ledcWrite(2, 150);
   ledcWrite(3, 0);
 }
 
@@ -150,6 +174,7 @@ double current_distance,previous_distance,distance1,distance2;
 unsigned long current_Millis,time1,time2;
 int phase_5 = 1;
 int count = 0;
+int accel_count = 1;
 
 // for phase7
 
@@ -550,9 +575,13 @@ void loop()
               }
               // GY-271の初期化終了
 
-              // パラシュートと絡まらないように3秒間前進
+              // パラシュートと絡まらないように約3秒間前進
+              accel();
               forward();
               delay(3000);
+              brake();
+              off();
+              
               
               // GY-271のキャリブレーション
               delay(100);
@@ -588,8 +617,10 @@ void loop()
               phase = 5;
             }else{
               delay(100);
+              accel();
               forward();
               delay(1000);
+              brake();
               off();
               // Goalまでの偏角を計算する
               Angle_Goal = CalculateAngle(GOAL_lng, GOAL_lat, gps_longitude, gps_latitude);
@@ -749,8 +780,10 @@ void loop()
   
               //少し進む
               delay(100);
+              accel();
               forward();
               delay(1000);
+              brake();
               off();
             }
             break;
@@ -833,10 +866,16 @@ void loop()
                 CanSatLogData.println("moving for 1000[ms]");
                 CanSatLogData.flush();
                 time2 = millis();
+                if(accel_count != 0){
+                  accel();
+                }
+                accel_count = 0;
                 forward();
                 if (time2 - time1 >= 1000) //1秒間前進したら
                 {
+                  brake();
                   off();
+                  accel_count = 1;
                   phase_5 = 4;
                 }
                 break;
