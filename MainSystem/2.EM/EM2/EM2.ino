@@ -22,8 +22,8 @@ Adafruit_BME280 bme;
 TinyGPSPlus gps;
 double delta_lng,distance,azimuth;
 // you need to set up variables at first
-double GOAL_lat = 35.860568333;
-double GOAL_lng = 139.606675000;
+double GOAL_lat = 35.860588333;
+double GOAL_lng = 139.606866667;
 
 // for GY-271
 #include <DFRobot_QMC5883.h>
@@ -71,10 +71,10 @@ void accel()
 // 前進
 void forward()
 {
-  ledcWrite(0, 255); // channel, duty
-  ledcWrite(1, 0);
-  ledcWrite(2, 255);
-  ledcWrite(3, 0);
+  ledcWrite(0, 0); // channel, duty
+  ledcWrite(1, 255);
+  ledcWrite(2, 0);
+  ledcWrite(3, 255);
 }
 //ゆっくり停止
 void brake()
@@ -100,25 +100,25 @@ void off()
 void slow_rotating()
 {
   ledcWrite(0, 0);
-  ledcWrite(1, 100);
-  ledcWrite(2, 100);
+  ledcWrite(1, 150);
+  ledcWrite(2, 150);
   ledcWrite(3, 0);
 }
 // 回転
 void rotating()
 {
-  ledcWrite(0, 150);
-  ledcWrite(1, 0);
-  ledcWrite(2, 0);
-  ledcWrite(3, 150);
+  ledcWrite(0, 0);
+  ledcWrite(1, 255);
+  ledcWrite(2, 255);
+  ledcWrite(3, 0);
 }
 // 反回転
 void reverse_rotating()
 {
-  ledcWrite(0, 0);
-  ledcWrite(1, 150);
-  ledcWrite(2, 150);
-  ledcWrite(3, 0);
+  ledcWrite(0, 255);
+  ledcWrite(1, 0);
+  ledcWrite(2, 0);
+  ledcWrite(3, 255);
 }
 
 // for servomoter
@@ -673,14 +673,14 @@ void loop()
                 //反時計回り
                 if (llAngle > 20){
                   rotating();
-                  delay(500);
+                  delay(300);
                   off();
                 }
               }else{
                 //時計回り
                 if (rrAngle > 20){
                   reverse_rotating();
-                  delay(500);
+                  delay(300);
                   off();
                 }
               }
