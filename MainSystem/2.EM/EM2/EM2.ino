@@ -247,7 +247,7 @@ void setup()
   Serial.begin(38400, SERIAL_8N1,34,2); // ESP32-ガイガーカウンタ間のシリアル通信開始
   
   // for MPU6050
-  mySensor.beginAccel();
+  mySensor.beginAccel(ACC_FULL_SCALE_4_G);
   mySensor.beginGyro();
   mySensor.beginMag();
   
@@ -311,7 +311,7 @@ void loop()
           accelY = mySensor.accelY();
           accelZ = mySensor.accelZ();
           accelSqrt = mySensor.accelSqrt();
-          if(fabs(accelZ)>2.0){
+          if(fabs(accelZ)>4.0){
             ESP.restart();
           }
         }
