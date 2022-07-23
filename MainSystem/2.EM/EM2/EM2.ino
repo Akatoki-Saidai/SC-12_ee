@@ -22,8 +22,8 @@ Adafruit_BME280 bme;
 TinyGPSPlus gps;
 double delta_lng,distance,azimuth;
 // you need to set up variables at first
-double GOAL_lat = 35.860588333;
-double GOAL_lng = 139.606866667;
+double GOAL_lat = 35.860576667;
+double GOAL_lng = 139.606960000; 
 
 // for GY-271
 #include <DFRobot_QMC5883.h>
@@ -52,7 +52,7 @@ float Temperature, Pressure, Humid; // for BME280
 double accelX, accelY, accelZ, gyroX, gyroY, gyroZ, accelSqrt; // for MPU6050
 double gps_latitude, gps_longitude, gps_velocity; // for GPS
 int gps_time; // for GPS
-double ultra_distance = 0; // for HY-SRF05
+int ultra_distance = 0; // for HY-SRF05
 char data; // for ガイガーカウンタ
 
 // for motor
@@ -100,25 +100,25 @@ void off()
 void slow_rotating()
 {
   ledcWrite(0, 0);
-  ledcWrite(1, 150);
-  ledcWrite(2, 150);
+  ledcWrite(1, 100);
+  ledcWrite(2, 100);
   ledcWrite(3, 0);
 }
 // 回転
 void rotating()
 {
   ledcWrite(0, 0);
-  ledcWrite(1, 255);
-  ledcWrite(2, 255);
+  ledcWrite(1, 200);
+  ledcWrite(2, 200);
   ledcWrite(3, 0);
 }
 // 反回転
 void reverse_rotating()
 {
-  ledcWrite(0, 255);
+  ledcWrite(0, 200);
   ledcWrite(1, 0);
   ledcWrite(2, 0);
-  ledcWrite(3, 255);
+  ledcWrite(3, 200);
 }
 
 // for servomoter
@@ -331,7 +331,7 @@ void loop()
         Duration = pulseIn( echoPin, HIGH ); // センサからの入力
         if (Duration > 0) {
           Duration = Duration/2; // 往復距離を半分にする
-          ultra_distance = Duration*340*100/1000000; // 音速を340m/sに設定
+          ultra_distance = Duration*(331.5+0.6*Temperature)*100/1000000; // 音速を340m/sに設定
         } 
 
         // for ガイガーカウンタ
@@ -578,7 +578,7 @@ void loop()
               // パラシュートと絡まらないように約3秒間前進
               accel();
               forward();
-              delay(3000);
+              delay(2500);
               brake();
               off();
               
@@ -619,7 +619,7 @@ void loop()
               delay(100);
               accel();
               forward();
-              delay(1000);
+              delay(500);
               brake();
               off();
               // Goalまでの偏角を計算する
@@ -673,14 +673,14 @@ void loop()
                 //反時計回り
                 if (llAngle > 20){
                   rotating();
-                  delay(300);
+                  delay(200);
                   off();
                 }
               }else{
                 //時計回り
                 if (rrAngle > 20){
                   reverse_rotating();
-                  delay(300);
+                  delay(200);
                   off();
                 }
               }
@@ -782,7 +782,7 @@ void loop()
               delay(100);
               accel();
               forward();
-              delay(1000);
+              delay(500);
               brake();
               off();
             }
@@ -871,7 +871,7 @@ void loop()
                 }
                 accel_count = 0;
                 forward();
-                if (time2 - time1 >= 1000) //1秒間前進したら
+                if (time2 - time1 >= 500) //約1秒間前進したら
                 {
                   brake();
                   off();
@@ -941,11 +941,12 @@ void loop()
                 break;
     
               default:
+                off();
                 break;
 
             }
             
-          //########## スタックフェーズ ##########
+         /* //########## スタックフェーズ ##########
           case 7:
             if(phase_state != 7)
             {
@@ -959,10 +960,10 @@ void loop()
             }
 
             
-            break;     
+            break;*/    
         }
 
-      /*// センサー値を送信
+        /*// センサー値を送信
         Serial2.print(gps_time);
         Serial2.print(",");
         Serial2.print(gps_latitude, 9);
