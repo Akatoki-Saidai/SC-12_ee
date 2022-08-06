@@ -31,6 +31,7 @@ void setup() {
     
     //for servomoter
     servo1.init(19,1);
+    servo1.write(90);
     
 
 }//setup関数閉じ
@@ -54,11 +55,11 @@ void loop() {
   }
 
   if(aZ < -0.95){
-    servo1.write(170);//引数は角度(°)
+    servo1.write(175);//引数は角度(°)
     delay(1000);
   }
   else if(aZ > 0.85){
-        servo1.write(10);
+    servo1.write(5);
     delay(1000);
   }
 

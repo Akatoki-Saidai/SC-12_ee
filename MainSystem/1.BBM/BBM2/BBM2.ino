@@ -1,3 +1,4 @@
+
 //for PI
 #include <math.h>
 
@@ -100,7 +101,7 @@ char data;
 void setup()
 {
   // for GPS
-  Serial1.begin(9600, SERIAL_8N1, 5, 18); // ESP32-GPS間のシリアル通信開始
+  Serial1.begin(115200, SERIAL_8N1, 5, 18); // ESP32-GPS間のシリアル通信開始
   
   // SD Card initialization
   SPI.begin(sck, miso, mosi, ss);

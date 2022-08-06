@@ -128,7 +128,7 @@ void reverse_rotating()
 ESP_servo servo1;
 
 // for phase
-int phase = 4;// EM1では遠距離，中距離，近距離のみ
+int phase = 1; // 落下試験では待機，落下，分離，遠距離の移行まで
 int phase_state = 0;
 unsigned long currentMillis;
 
@@ -524,7 +524,7 @@ void loop()
             }
 
             Serial2.println("WARNING: 9v voltage on");
-            digitalWrite(cutparac, HIGH); // オン
+            //digitalWrite(cutparac, HIGH); // 落下試験ではオフのまま
             delay(outputcutsecond*1000);// 電流を流す
             Serial2.println("9v voltage off");
             digitalWrite(cutparac, LOW); // オフ

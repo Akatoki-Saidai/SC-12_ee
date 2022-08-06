@@ -54,6 +54,7 @@ double gps_latitude, gps_longitude, gps_velocity; // for GPS
 int gps_time; // for GPS
 int ultra_distance = 0; // for HY-SRF05
 char data; // for ガイガーカウンタ
+int i = 0;
 
 // for motor
 //ゆっくり加速
@@ -128,7 +129,7 @@ void reverse_rotating()
 ESP_servo servo1;
 
 // for phase
-int phase = 4;// EM1では遠距離，中距離，近距離のみ
+int phase = 3;// 走行試験では分離，遠距離，中距離，近距離
 int phase_state = 0;
 unsigned long currentMillis;
 
@@ -940,15 +941,15 @@ void loop()
                 phase_5 = 7;
                 break;
     
-              default:
+              case 7:
                 off();
                 break;
 
             }
             
          /* //########## スタックフェーズ ##########
-          case 7:
-            if(phase_state != 7)
+          case 8:
+            if(phase_state != 8)
             {
               Serial2.println("Phase7: transition completed");
               // LogDataの保存
@@ -956,7 +957,7 @@ void loop()
               CanSatLogData.println("Phase7: transition completed");
               CanSatLogData.flush();
 
-              phase_state = 7;
+              phase_state = 8;
             }
 
             
@@ -1012,7 +1013,6 @@ void loop()
         SensorData.print(Angle_gy271);
         SensorData.print(",");
         SensorData.println(ultra_distance);
-        SensorData.flush();
     }
   } // "if(Serial1.available()>0)"の閉じ
 } // loop関数の閉じ
